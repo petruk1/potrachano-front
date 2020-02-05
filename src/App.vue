@@ -1,203 +1,119 @@
 <template>
     <div id="app">
+        <h3 class="title">Potracheno</h3>
+        <ul class="menu">
+            <router-link to="/income" active-class="active-route">
+                <li class="item">Income</li>
+            </router-link>
+            <router-link to="/expends" active-class="active-route">
+                <li class="item">Expends</li>
+            </router-link>
+            <router-link to="/stat" active-class="active-route">
+                <li class="item">Statistic</li>
+            </router-link>
+        </ul>
         <div class="content-block">
-            <h3 class="title">Potracheno</h3>
-            <form>
-                <input class="input name"
-                       placeholder="item"
-                       v-model="item.name">
-                <input class="input price"
-                       v-model="item.price"
-                       placeholder="amount"
-                       @keyup.enter="submitNewPosition">
-            </form>
-            <DynamicCombobox></DynamicCombobox>
-            <div class="table elevation-1">
-                <div class="row header">
-                    <div class="cell">
-                        Date
-                    </div>
-                    <div class="cell">
-                        Category
-                    </div>
-                    <div class="cell">
-                        Amount
-                    </div>
-                </div>
-                <div class="row" v-for="(item, index) of positions" :key="index">
-                    <div class="cell">
-                        {{item.date}}
-                    </div>
-                    <div class="cell">
-                        {{item.name||item.title}}
-                    </div>
-                    <div class="cell">
-                        {{item.price}}
-                    </div>
-                </div>
-                <div class="row footer">
-                    <div class="cell">
-                        {{datesRange}}
-                    </div>
-                    <div class="cell">
-
-                    </div>
-                    <div class="cell">
-                        ₴ {{summaryExpends}}
-                    </div>
-                </div>
-            </div>
+            <router-view></router-view>
         </div>
-
     </div>
 </template>
 
 <script>
-    import DatabaseService from './database.service';
-    import DynamicCombobox from "./components/PositionItem";
+    import DatabaseService from "./database.service";
+    import Expends from "./components/Expends";
+    import Income from "./components/Income";
+    import Statistic from "./components/Statistic";
+    import VueRouter from "vue-router";
+
+    const routes = [
+        {
+            path: "",
+            redirect: "/expends"
+        },
+        {
+            path: "/expends",
+            component: Expends
+        },
+        {
+            path: "/income",
+            component: Income
+        }, {
+            path: "/stat",
+            component: Statistic
+        }
+    ];
+
+    const router = new VueRouter({
+        routes
+    });
 
     const dbService = DatabaseService.getInstance();
-
     export default {
-        name: 'app',
-        components: {DynamicCombobox},
-        methods: {
-            submitNewPosition() {
-                let today = new Date();
-                const date = today.getDate();
-                const month = today.getMonth() + 1;
-                const year = today.getFullYear();
-                dbService.expends.push(
-                    {
-                        date: `${date}/${month}/${year}`,
-                        name: this.item.name,
-                        price: this.item.price
-                    });
-                this.item.price = '';
-                this.item.name = '';
-            }
-        },
-        mounted() {
-            dbService.expends.on('value', (x) => {
-                this.rawPositions = x.val();
-            })
-        },
-        data: () => {
-            return {
-                item: {
-                    name: '',
-                    price: '',
-                },
-                rawPositions: {}
-            }
-        },
-        computed: {
-            positions() {
-                const result = [];
-                for (const entry in this.rawPositions) {
-                    result.push(this.rawPositions[entry]);
-                }
-                return result;
-            },
-            datesRange() {
-                const poss = this.positions;
-                if (poss.length) {
-                    return `${poss[0].date} --- ${poss[poss.length - 1].date}`
-                }
-                return null
-            },
-            summaryExpends() {
-                return Math.round(this.positions.reduce((acc, curr) => +curr.price + acc, 0) * 100) / 100;
-            }
-        }
-    }
+        name: "app",
+        components: {},
+        provide: {dbService},
+        router
+    };
 </script>
 
 <style lang="scss">
+    #app {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-size: .9rem;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        font-family: grenze-regular, sans-serif;
+        background-image: url("assets/bg.png");
+        background-size: cover;
+    }
+
+    .title {
+        text-align: center;
+        min-height: 50px;
+        font-size: 2.5em;
+    }
+
     .content-block {
         display: flex;
         flex-direction: column;
         align-items: center;
-        background-color: aliceblue;
-        width: 60%;
-        height: 100%;
-
-        .title {
-            min-height: 50px;
-            font-size: 2.5em;
-            height: 10%;
-        }
-
-        form {
-            width: 90%;
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 30px;
-
-            .input {
-                padding: 5px;
-                outline: none;
-                font-size: 1.2em;
-                border-radius: 5px;
-                border: 1px solid #dedbdb;
-                box-shadow: 0 0 2px 0 #d8d1d1;
-            }
-
-            .name {
-                flex: 6;
-            }
-
-            .price {
-                width: 50px;
-                flex: 1;
-            }
-        }
+        width: 90%;
+        height: calc(100% - 210px);
+        padding: 10px 10px 0 10px;
     }
 
-    .table {
-        display: inline-flex;
-        flex-direction: column;
-        width: 100%;
-        position: relative;
-        background-color: white;
+    .input {
+        padding: 5px;
+        outline: none;
+        font-size: 1.2em;
         border-radius: 5px;
-        overflow: auto;
-        margin-bottom: 5px;
+        border: 1px solid #dedbdb;
+        box-shadow: 0 0 2px 0 #d8d1d1;
+    }
 
-        .row {
-            display: flex;
-            flex-direction: row;
-            width: 100%;
-            font-size: 1.1em;
-            min-height: 40px;
+    .menu {
+        width: 100%;
+        display: flex;
+        list-style: none;
+        justify-content: center;
+        padding: 0;
 
-            .cell {
-                display: inline-block;
-                min-width: 30px;
-
-                width: 33.3%;
-                text-align: center;
-                padding: 5px;
-            }
+        .item {
+            padding: 10px 15px;
+            border-radius: 2px;
+            cursor: pointer;
+            margin: 0 5px;
+            font-size: 1.1rem;
+            color: #44494e;
         }
 
-        .footer {
-            position: sticky;
-            bottom: 0;
-            min-height: 40px;
-            background-color: white;
-            box-shadow: darkgrey 0 -1px 3px -1px;
-            padding: 5px 0;
-        }
-
-        .header {
-            position: sticky;
-            top: 0;
-            min-height: 40px;
-            background-color: white;
-            padding: 5px 0;
-            font-size: 1.2em;
-            box-shadow: darkgrey 0 1px 3px -1px;
+        a {
+            text-decoration: none;
         }
     }
 
@@ -209,14 +125,14 @@
         box-shadow: darkgrey 0 2px 5px 1px;
     }
 
-    #app {
-        display: flex;
-        justify-content: center;
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-        font-family: grenze-regular, sans-serif;
+    .active-route {
+        background-color: #0000000f;
+    }
+
+    @media (max-width: 1080px) {
+        #app {
+            font-size: 0.8rem;
+        }
     }
 
     @font-face {
